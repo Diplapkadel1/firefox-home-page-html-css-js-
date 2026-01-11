@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIPLAP | Emerald Executive</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap');
+
+        :root {
+            --bg: #050505;
+            --accent: #00ff88;
+            --glass: rgba(255, 255, 255, 0.02);
+            --border: rgba(0, 255, 136, 0.15);
+            --text-dim: #777;
+        }
+
+        /* HIDE SYSTEM MOUSE */
+        *, *::before, *::after {
+            cursor: none !important;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .video-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            z-index: -2;
+            opacity: 0.15;
+            filter: grayscale(100%);
+        }
+
+        #trailCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        /* CUSTOM MOUSE ELEMENTS */
+        .smallCursor, .bigCursor {
+            position: fixed;
+            top: 0; left: 0;
+            pointer-events: none;
+            z-index: 10000;
+            border-radius: 50%;
+            opacity: 0;
+            will-change: transform;
+        }
+        .smallCursor { 
+            width: 5px; height: 5px; 
+            background: var(--accent); 
+            box-shadow: 0 0 15px var(--accent); 
+        }
+        .bigCursor {
+            width: 32px; height: 32px;
+            border: 1px solid rgba(0, 255, 136, 0.5);
+            background: rgba(0, 255, 136, 0.02);
+            /* Size transition is okay, but position must be JS handled */
+            transition: width 0.3s, height 0.3s, background 0.3s, border-color 0.3s;
+        }
+        .cursor-hover { 
+            width: 55px !important; height: 55px !important; 
+            background: rgba(0, 255, 136, 0.1) !important;
+            border-color: var(--accent) !important;
+        }
+
+        /* LAYOUT UI */
+        header {
+            width: 90%;
+            padding: 3rem 0 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            z-index: 10;
+        }
+
+        .time-box h1 { font-size: 4rem; margin: 0; font-weight: 900; letter-spacing: -3px; line-height: 1; }
+        .time-box span { color: var(--accent); letter-spacing: 4px; font-size: 0.75rem; font-weight: 700; }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 100%;
+            max-width: 850px;
+            z-index: 5;
+        }
+
+        #search-input {
+            width: 100%;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 24px;
+            border-radius: 20px;
+            color: #fff;
+            font-size: 1.2rem;
+            outline: none;
+            text-align: center;
+            backdrop-filter: blur(15px);
+            transition: 0.3s;
+        }
+        #search-input:focus {
+            border-color: var(--accent);
+            background: rgba(0, 255, 136, 0.04);
+        }
+
+        .quote-wrap { text-align: center; margin-bottom: 3rem; min-height: 60px; }
+        #quote-text { color: var(--text-dim); font-style: italic; font-size: 1rem; }
+        #quote-author { color: var(--accent); display: block; font-size: 0.7rem; margin-top: 10px; font-weight: 700; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        .card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 22px 10px;
+            border-radius: 16px;
+            text-decoration: none;
+            color: #bbb;
+            text-align: center;
+            transition: 0.3s;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .card:hover {
+            border-color: var(--accent);
+            background: rgba(0, 255, 136, 0.08);
+            color: #fff;
+            transform: translateY(-5px);
+        }
+        .card.studio:hover { border-color: #ff4444; background: rgba(255, 0, 0, 0.1); }
+
+        .watermark {
+            position: fixed;
+            bottom: 30px;
+            font-weight: 900;
+            font-size: 7vw;
+            opacity: 0.02;
+            letter-spacing: 30px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <img src="img/bg.jpeg" alt="background" class="video-bg">
+    <canvas id="trailCanvas"></canvas>
+
+    <header>
+        <div class="time-box">
+            <span id="greeting">SYSTEM ACTIVE</span>
+            <h1 id="time-display">00:00</h1>
+        </div>
+        <a href="https://c3.gt.tc" target="_blank" class="card" style="padding: 12px 25px;">PORTFOLIO</a>
+    </header>
+
+    <main class="main-content">
+        <div class="search-container">
+            <form action="https://www.google.com/search" method="GET" target="_blank">
+                <input type="text" id="search-input" name="q" placeholder="Type to search..." autofocus autocomplete="off">
+            </form>
+        </div>
+
+        <div class="quote-wrap">
+            <span id="quote-text">"Loading..."</span>
+            <span id="quote-author"></span>
+        </div>
+
+        <div class="grid">
+            <a href="https://youtube.com/@vocalreplay" target="_blank" class="card">YouTube</a>
+            <a href="https://studio.youtube.com" target="_blank" class="card studio">YT Studio</a>
+            <a href="https://github.com/" target="_blank" class="card">GitHub</a>
+            <a href="https://facebook.com" target="_blank" class="card">Facebook</a>
+            <a href="https://console.cloudinary.com/app/c-0b072cb1d4b9880c6dd925afbe52aa/assets/media_library/search" target="_blank" class="card">Cloudinary</a>
+            <a href="https://www.blogger.com/u/4/blog/posts/8295461665161950293" target="_blank" class="card">Blogger</a>
+            <a href="https://mail.google.com" target="_blank" class="card">Gmail</a>
+            <a href="https://krishisamacharnepal.blogspot.com" target="_blank" class="card">Krishi Blog</a>
+        </div>
+    </main>
+
+    <div class="watermark">DIPLAP</div>
+
+    <div class="smallCursor"></div>
+    <div class="bigCursor"></div>
+
+    <script src="js/mouse.js"></script>
+    <script>
+        function clock() {
+            const now = new Date();
+            const hrs = now.getHours();
+            document.getElementById('time-display').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+            let text = hrs < 12 ? "GOOD MORNING" : (hrs < 18 ? "GOOD AFTERNOON" : "GOOD EVENING");
+            document.getElementById('greeting').innerText = text;
+        }
+        setInterval(clock, 1000); clock();
+
+        async function getQuote() {
+            try {
+                const res = await fetch('https://api.allorigins.win/raw?url=https://zenquotes.io/api/random');
+                const data = await res.json();
+                document.getElementById('quote-text').innerText = `"${data[0].q}"`;
+                document.getElementById('quote-author').innerText = `— ${data[0].a}`;
+            } catch (e) {
+                document.getElementById('quote-text').innerText = "Stay focused, stay driven.";
+            }
+        }
+        getQuote();
+    </script>
+</body>
+</html>
